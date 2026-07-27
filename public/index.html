@@ -1,10 +1,21 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>LLM Chat App</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 		<style>
+			* { margin: 0; padding: 0; box-sizing: border-box; }
+
+			::-webkit-scrollbar { width: 6px; }
+			::-webkit-scrollbar-track { background: transparent; }
+			::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 999px; }
+			::-webkit-scrollbar-thumb:hover { background: var(--text-light); }
+
 			:root {
 				--primary-color: #f6821f;
 				--primary-hover: #e67e22;
@@ -16,33 +27,167 @@
 				--assistant-msg-bg: #f3f4f6;
 			}
 
-			* {
-				box-sizing: border-box;
-				margin: 0;
-				padding: 0;
+			[data-theme="dark"] {
+				--bg: #07070d;
+				--bg-alt: #0c0c14;
+				--surface: rgba(255,255,255,0.03);
+				--surface-alt: rgba(255,255,255,0.06);
+				--border: rgba(255,255,255,0.07);
+				--border-light: rgba(255,255,255,0.04);
+				--text: rgba(255,255,255,0.92);
+				--text-secondary: rgba(255,255,255,0.6);
+				--text-muted: rgba(255,255,255,0.45);
+				--text-faint: rgba(255,255,255,0.22);
+				--accent: #f6821f;
+				--accent-hover: #e67e22;
+				--accent-glow: rgba(246,130,31,0.25);
+				--accent-subtle: rgba(246,130,31,0.08);
+				--user-msg-bg: rgba(246,130,31,0.1);
+				--assistant-msg-bg: rgba(255,255,255,0.04);
+				--input-bg: rgba(255,255,255,0.04);
+				--footer-color: rgba(255,255,255,0.35);
+			}
+
+			[data-theme="light"] {
+				--bg: #e8ecf0;
+				--bg-alt: #dce0e6;
+				--surface: rgba(255,255,255,0.6);
+				--surface-alt: rgba(255,255,255,0.7);
+				--border: rgba(0,0,0,0.08);
+				--border-light: rgba(0,0,0,0.04);
+				--text: #0f1118;
+				--text-secondary: #3a3f4b;
+				--text-muted: #5a6070;
+				--text-faint: #8a90a0;
+				--accent: #f6821f;
+				--accent-hover: #e67e22;
+				--accent-glow: rgba(246,130,31,0.2);
+				--accent-subtle: rgba(246,130,31,0.08);
+				--user-msg-bg: rgba(246,130,31,0.08);
+				--assistant-msg-bg: rgba(0,0,0,0.03);
+				--input-bg: rgba(255,255,255,0.7);
+				--footer-color: #5a6070;
 			}
 
 			body {
-				font-family:
-					-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
-					Cantarell, sans-serif;
+				font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 				line-height: 1.6;
-				color: var(--text-color);
+				color: var(--text);
+				background: var(--bg);
 				max-width: 800px;
 				margin: 0 auto;
 				padding: 1rem;
+				min-height: 100vh;
+				transition: background 0.3s, color 0.3s;
+				position: relative;
+			}
+
+			.hero-bg {
+				position: fixed;
+				inset: 0;
+				background:
+					radial-gradient(circle at 20% 30%, rgba(246,130,31,0.08) 0%, transparent 50%),
+					radial-gradient(circle at 80% 60%, rgba(246,130,31,0.04) 0%, transparent 50%);
+				z-index: 0;
+				pointer-events: none;
+			}
+
+			[data-theme="light"] .hero-bg {
+				background:
+					radial-gradient(circle at 20% 30%, rgba(246,130,31,0.06) 0%, transparent 50%),
+					radial-gradient(circle at 80% 60%, rgba(246,130,31,0.03) 0%, transparent 50%);
+			}
+
+			.grid-bg {
+				position: fixed;
+				inset: 0;
+				background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.02) 1px, transparent 0);
+				background-size: 24px 24px;
+				z-index: 0;
+				pointer-events: none;
+			}
+
+			[data-theme="light"] .grid-bg {
+				background-image: radial-gradient(circle at 1px 1px, rgba(0,0,0,0.03) 1px, transparent 0);
+			}
+
+			.glass {
+				position: relative;
+				z-index: 1;
+				background: var(--surface);
+				backdrop-filter: blur(40px);
+				-webkit-backdrop-filter: blur(40px);
+				border-radius: 24px;
+				box-shadow: 0 0 0 1px var(--border), 0 24px 80px rgba(0,0,0,0.3);
+				transition: background 0.3s, box-shadow 0.3s;
+			}
+
+			.glass::before {
+				content: '';
+				position: absolute;
+				inset: 0;
+				border-radius: 24px;
+				padding: 1px;
+				background: linear-gradient(135deg, var(--accent-glow), transparent 40%, transparent 60%, rgba(246,130,31,0.03));
+				-webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+				-webkit-mask-composite: xor;
+				mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+				mask-composite: exclude;
+				pointer-events: none;
+			}
+
+			.gradient-text {
+				background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+				background-clip: text;
+				-webkit-background-clip: text;
+				-webkit-text-fill-color: transparent;
 			}
 
 			header {
 				text-align: center;
-				margin-bottom: 2rem;
-				padding: 1rem 0;
-				border-bottom: 1px solid var(--border-color);
+				margin-bottom: 1.5rem;
+				padding: 1.25rem 0;
+				border-bottom: 1px solid var(--border);
+				position: relative;
+				z-index: 1;
 			}
 
 			h1 {
 				font-size: 1.5rem;
-				color: var(--primary-color);
+				font-weight: 700;
+				letter-spacing: -0.02em;
+				margin-bottom: 0.25rem;
+			}
+
+			header p {
+				color: var(--text-muted);
+				font-size: 0.85rem;
+			}
+
+			.theme-btn {
+				position: fixed;
+				top: 1.25rem;
+				right: 1.25rem;
+				z-index: 10;
+				display: flex;
+				align-items: center;
+				gap: 0.4rem;
+				padding: 0.4rem 0.85rem;
+				border: 1px solid var(--border);
+				border-radius: 999px;
+				background: var(--surface);
+				color: var(--text-muted);
+				font-family: var(--font);
+				font-size: 0.75rem;
+				font-weight: 500;
+				cursor: pointer;
+				transition: all 0.2s;
+				text-decoration: none;
+				backdrop-filter: blur(20px);
+			}
+			.theme-btn:hover {
+				background: color-mix(in srgb, var(--surface) 80%, var(--accent));
+				color: var(--text);
 			}
 
 			.chat-container {
@@ -50,101 +195,153 @@
 				flex-direction: column;
 				height: calc(100vh - 200px);
 				min-height: 400px;
-				border: 1px solid var(--border-color);
-				border-radius: 8px;
+				border: 1px solid var(--border);
+				border-radius: 24px;
 				overflow: hidden;
+				background: var(--surface);
+				backdrop-filter: blur(40px);
+				-webkit-backdrop-filter: blur(40px);
+				box-shadow: 0 0 0 1px var(--border), 0 24px 80px rgba(0,0,0,0.3);
+				position: relative;
+				z-index: 1;
 			}
 
 			.chat-messages {
 				flex: 1;
 				overflow-y: auto;
 				padding: 1rem;
-				background-color: var(--light-bg);
+				background-color: var(--bg-alt);
+				display: flex;
+				flex-direction: column;
+				gap: 0.75rem;
 			}
 
 			.message {
-				margin-bottom: 1rem;
-				padding: 0.75rem;
-				border-radius: 8px;
+				padding: 0.85rem 1rem;
+				border-radius: 16px;
 				max-width: 80%;
+				animation: fadeInUp 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+			}
+
+			@keyframes fadeInUp {
+				from { opacity: 0; transform: translateY(8px); }
+				to { opacity: 1; transform: translateY(0); }
 			}
 
 			.message p {
 				white-space: pre-line;
 				margin: 0;
 				overflow-wrap: anywhere;
+				font-size: 0.9rem;
+				line-height: 1.6;
 			}
 
 			.user-message {
 				background-color: var(--user-msg-bg);
 				align-self: flex-end;
 				margin-left: auto;
+				border: 1px solid color-mix(in srgb, var(--accent) 15%, transparent);
 			}
 
 			.assistant-message {
 				background-color: var(--assistant-msg-bg);
 				align-self: flex-start;
+				border: 1px solid var(--border-light);
 			}
 
 			.message-input {
 				display: flex;
 				padding: 0.75rem;
-				border-top: 1px solid var(--border-color);
-				background-color: white;
+				border-top: 1px solid var(--border);
+				background-color: var(--surface);
+				backdrop-filter: blur(20px);
 			}
 
 			#user-input {
 				flex: 1;
-				padding: 0.75rem;
-				border: 1px solid var(--border-color);
-				border-radius: 4px;
-				font-family: inherit;
+				padding: 0.75rem 1rem;
+				border: 1px solid var(--border);
+				border-radius: 12px;
+				font-family: 'Space Grotesk', inherit;
+				font-size: 0.9rem;
 				resize: none;
 				min-height: 44px;
+				background: var(--input-bg);
+				color: var(--text);
+				outline: none;
+				transition: border-color 0.2s, box-shadow 0.2s;
+			}
+
+			#user-input::placeholder { color: var(--text-faint); }
+
+			#user-input:focus {
+				border-color: var(--accent);
+				box-shadow: 0 0 0 3px var(--accent-subtle);
 			}
 
 			#send-button {
 				margin-left: 0.5rem;
-				padding: 0 1rem;
-				background-color: var(--primary-color);
+				padding: 0 1.25rem;
+				background: linear-gradient(135deg, var(--accent), var(--accent-hover));
 				color: white;
 				border: none;
-				border-radius: 4px;
+				border-radius: 12px;
 				cursor: pointer;
-				transition: background-color 0.2s;
+				font-family: 'Space Grotesk', inherit;
+				font-weight: 600;
+				font-size: 0.9rem;
+				transition: all 0.2s ease;
+				box-shadow: 0 0 0 1px rgba(255,255,255,0.05), 0 4px 16px var(--accent-glow);
 			}
 
 			#send-button:hover {
-				background-color: var(--primary-hover);
+				transform: translateY(-1px);
+				box-shadow: 0 0 0 1px rgba(255,255,255,0.08), 0 8px 32px var(--accent-glow);
 			}
 
+			#send-button:active { transform: translateY(0) scale(0.99); }
+
 			#send-button:disabled {
-				background-color: var(--text-light);
+				background: var(--surface);
+				box-shadow: none;
+				color: var(--text-faint);
 				cursor: not-allowed;
+				transform: none;
 			}
 
 			.typing-indicator {
 				display: none;
 				font-style: italic;
-				color: var(--text-light);
-				padding: 1rem;
+				color: var(--text-muted);
+				padding: 0.75rem 1rem;
+				font-size: 0.85rem;
+				position: relative;
+				z-index: 1;
 			}
 
 			.typing-indicator.visible {
 				display: block;
+				animation: fadeInUp 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 			}
 
 			footer {
 				margin-top: 1rem;
 				text-align: center;
-				font-size: 0.85rem;
-				color: var(--text-light);
+				font-size: 0.8rem;
+				color: var(--footer-color);
+				position: relative;
+				z-index: 1;
 			}
 		</style>
 	</head>
 	<body>
+		<div class="hero-bg"></div>
+		<div class="grid-bg"></div>
+
+		<button id="themeToggle" class="theme-btn"><i class="fa-regular fa-sun"></i> Light</button>
+
 		<header>
-			<h1>Cloudflare AI Chat</h1>
+			<h1><span class="gradient-text">Cloudflare AI Chat</span></h1>
 			<p>Powered by Cloudflare Workers AI</p>
 		</header>
 
@@ -176,6 +373,29 @@
 		<footer>
 			<p>Cloudflare Workers AI Chat Template &copy; 2025</p>
 		</footer>
+
+		<script>
+			(function() {
+				var html = document.documentElement;
+				var saved = localStorage.getItem('theme') || 'dark';
+				html.setAttribute('data-theme', saved);
+				updateIcon(saved);
+
+				document.getElementById('themeToggle').addEventListener('click', function() {
+					var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+					html.setAttribute('data-theme', next);
+					localStorage.setItem('theme', next);
+					updateIcon(next);
+				});
+
+				function updateIcon(t) {
+					var btn = document.getElementById('themeToggle');
+					btn.innerHTML = t === 'dark'
+						? '<i class="fa-regular fa-sun"></i> Light'
+						: '<i class="fa-regular fa-moon"></i> Dark';
+				}
+			})();
+		</script>
 
 		<!-- Chat app script -->
 		<script src="chat.js"></script>
